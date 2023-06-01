@@ -1,0 +1,10 @@
+scikit-learn==0.24.2
+pyspark==3.2.0
+pickle5==0.0.11
+dask==2021.9.1
+numpy==1.21.4
+ipython==7.33.0
+jupyter==1.0.0
+
+#Ejecutar en la linea de comandos:
+#pip install -r requirements.txt
