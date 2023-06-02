@@ -1,8 +1,7 @@
-# Importar librerías necesarias
-import bcrypt
+
+import bcrypt #para encriptar la contraseña
 import datetime
 
-# Clase para representar un NFT
 class NFT:
     def __init__(self, id, title, description, price, seller_id):
         self.id = id
@@ -11,7 +10,6 @@ class NFT:
         self.price = price
         self.seller_id = seller_id
 
-# Clase para representar un usuario
 class User:
     def __init__(self, id, username, password):
         self.id = id
@@ -25,8 +23,7 @@ class User:
     
     def check_password(self, password):
         return bcrypt.checkpw(password.encode(), self.password)
-    
-# Clase para representar el servidor de gestión de NFTs
+
 class NFTServer:
     def __init__(self):
         self.users = []
@@ -54,7 +51,6 @@ class NFTServer:
     def buy_nft(self, nft_id, buyer_id):
         nft = self.get_nft_by_id(nft_id)
         if nft and nft.seller_id != buyer_id:
-            # Realizar lógica de compra, actualizar base de datos, etc.
             self.nfts.remove(nft)
             return True
         return False
@@ -65,27 +61,35 @@ class NFTServer:
                 return nft
         return None
 
-# Ejemplo de uso
-server = NFTServer()
+def main():
+    server = NFTServer()
+    
+    # Registro de usuarios
+    server.register_user("user1", "password1")
+    server.register_user("user2", "password2")
 
-# Registro de usuarios
-server.register_user("user1", "password1")
-server.register_user("user2", "password2")
+    # Inicio de sesión de usuarios
+    user1 = server.login_user("user1", "password1")
+    user2 = server.login_user("user2", "password2")
 
-# Inicio de sesión de usuarios
-user1 = server.login_user("user1", "password1")
-user2 = server.login_user("user2", "password2")
+    # Creación de NFTs
+    server.create_nft("NFT1", "Descripción del NFT 1", 100, user1.id)
+    server.create_nft("NFT2", "Descripción del NFT 2", 200, user1.id)
+    server.create_nft("NFT3", "Descripción del NFT 3", 150, user2.id)
 
-# Creación de NFTs
-server.create_nft("NFT1", "Descripción del NFT 1", 100, user1.id)
-server.create_nft("NFT2", "Descripción del NFT 2", 200, user1.id)
-server.create_nft("NFT3", "Descripción del NFT 3", 150, user2.id)
+    # Listado de NFTs
+    nfts = server.list_nfts()
+    for nft in nfts:
+        print(f"ID: {nft.id}, Title: {nft.title}, Description: {nft.description}, Price: {nft.price}, Seller ID: {nft.seller_id}")
 
-# Listado de NFTs
-nfts = server.list_nfts()
-for nft in nfts:
-    print(f"ID: {nft.id}, Title: {nft.title}, Description: {nft.description}, Price: {nft.price}, Seller ID: {nft.seller_id}")
+    # Compra de un NFT
+    nft_id = 1
+    buyer_id = user2
 
-# Compra de un NFT
-nft_id = 1
-buyer_id = user2
+    if server.buy_nft(nft_id, buyer_id):
+        print("¡NFT comprado con éxito!")
+    else:
+        print("No se pudo comprar el NFT")
+
+if __name__ == "__main__":
+    main()
