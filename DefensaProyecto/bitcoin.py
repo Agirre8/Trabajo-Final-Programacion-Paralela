@@ -12,7 +12,7 @@ ticker = exchange.fetch_ticker('BTC/EUR')
 bitcoin_value_euros = ticker['last']
 
 # Cargar los datos de tráfico aéreo del aeropuerto de San Francisco
-df = pd.read_csv('datos_trafico_aereo.csv')
+df = pd.read_csv('DATOS/air_traffic_data_limpio.csv')
 
 # Convertir el DataFrame de pandas a un DataFrame de Dask para paralelizar el procesamiento
 df_dask = dd.from_pandas(df, npartitions=4)
