@@ -55,6 +55,46 @@ media_pasajeros.show(truncate=False)
 
 
 
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import avg, stddev, col
+
+spark = SparkSession.builder.getOrCreate()
+
+# Calculate the mean and standard deviation of passengers by airline
+media_pasajeros = df.groupBy("Operating Airline").agg(avg("Passenger Count").alias("Media_Pasajeros"))
+desviacion_pasajeros = df.groupBy("Operating Airline").agg(stddev("Passenger Count").alias("Desviacion_Pasajeros"))
+
+# Find the smallest mean and standard deviation values
+menor_valor_media = media_pasajeros.selectExpr("MIN(Media_Pasajeros)").first()[0]
+menor_valor_desviacion = desviacion_pasajeros.selectExpr("MIN(Desviacion_Pasajeros)").first()[0]
+
+# Filter the DataFrame to get the record with the smallest MediaPasajeros
+menor_registro_media = media_pasajeros.filter(col("Media_Pasajeros") == menor_valor_media).first()
+aerolinea_menor_media = menor_registro_media["Operating Airline"]
+
+# Filter the DataFrame to get the record with the smallest DesviacionPasajeros
+menor_registro_desviacion = desviacion_pasajeros.filter(col("Desviacion_Pasajeros") == menor_valor_desviacion).first()
+aerolinea_menor_desviacion = menor_registro_desviacion["Operating Airline"]
+
+# Find the largest mean and standard deviation values
+mayor_valor_media = media_pasajeros.selectExpr("MAX(Media_Pasajeros)").first()[0]
+mayor_valor_desviacion = desviacion_pasajeros.selectExpr("MAX(Desviacion_Pasajeros)").first()[0]
+
+# Filter the DataFrame to get the record with the largest MediaPasajeros
+mayor_registro_media = media_pasajeros.filter(col("Media_Pasajeros") == mayor_valor_media).first()
+aerolinea_mayor_media = mayor_registro_media["Operating Airline"]
+
+# Filter the DataFrame to get the record with the largest DesviacionPasajeros
+mayor_registro_desviacion = desviacion_pasajeros.filter(col("Desviacion_Pasajeros") == mayor_valor_desviacion).first()
+aerolinea_mayor_desviacion = mayor_registro_desviacion["Operating Airline"]
+
+print("Media de Pasajeros más Pequeña:", menor_valor_media, "(Aerolínea correspondiente:", valor_dict_invertido[aerolinea_menor_media], ")")
+print("Desviación Estándar más Pequeña:", menor_valor_desviacion, "(Aerolínea correspondiente:", valor_dict_invertido[aerolinea_menor_desviacion], ")")
+print("Media de Pasajeros más Grande:", mayor_valor_media, "(Aerolínea correspondiente:", valor_dict_invertido[aerolinea_mayor_media], ")")
+print("Desviación Estándar más Grande:", mayor_valor_desviacion, "(Aerolínea correspondiente:", valor_dict_invertido[aerolinea_mayor_desviacion], ")")
+
+
+
 #CONCLUSIONES:
 #compruebo cuantos vuelos han salido de Xtra Airways ya que la desviacion estandar es 0 y eso es bastante extraño
 import dask.dataframe as dd
@@ -70,7 +110,6 @@ print(f"Hay {cantidad_operating_airlines} vuelos registrados de la compañía Xt
 cantidad_operating_airlines = (df["Operating Airline"] == valor_dict["United Airlines"]).sum().compute()
 
 print(f"Hay {cantidad_operating_airlines} vuelos registrados de la compañía United Airlines, tiene sentido que haya tantos ya que tiene una alta desviación estándar")
-
 
 
 
@@ -99,7 +138,10 @@ sns.heatmap(matriz_correlacion, annot=True, cmap="coolwarm", ax=ax)
 plt.savefig("Graficos/Matriz_Correlacion.png")
 
 
+
 print(matriz_correlacion)
+
+
 
 
 
@@ -115,21 +157,55 @@ print("\nPassenger Count y GEO Summary tienen una correlación negativa moderada
 
 
 
-# Obtener la matriz de confusión
-matrix = confusion_matrix(y_test, y_pred)
+
+import matplotlib.pyplot as plt
 
 importance = model.feature_importances_
 
+# Crear un dataframe con la importancia de cada característica
+importance_df = pd.DataFrame({'Feature': X_train.columns, 'Importance': importance})
 
-sns.heatmap(matrix, annot=True, cmap="Blues")
-plt.xlabel("Predicted labels")
-plt.ylabel("True labels")
-plt.title("Matriz de Confusion en la Prediccion del Precio")
+# Ordenar el dataframe por importancia descendente
+importance_df = importance_df.sort_values(by='Importance', ascending=False)
+
+# Imprimir los resultados
+print(importance_df)
 
 
-plt.savefig("Graficos/Matriz_Confusion_Prediccion_Precio.png")
+# Plotear el gráfico de barras de las importancias
+plt.figure(figsize=(10, 6))
+plt.bar(importance_df['Feature'], importance_df['Importance'])
+plt.xticks(rotation=90)
+plt.xlabel('Característica')
+plt.ylabel('Importancia')
+plt.title('Importancia de las características en el modelo de árbol de decisiones')
+plt.tight_layout()
 
+# Guardar el gráfico como un archivo PNG
+plt.savefig('importance_plot.png')
+
+# Mostrar el gráfico en la ventana
 plt.show()
+
+
+
+
+
+# Calculate the mean absolute error (MAE)
+mae = mean_absolute_error(y_test, y_pred)
+
+# Plot the predicted values vs. the true values
+plt.scatter(y_test, y_pred)
+plt.xlabel("True Values")
+plt.ylabel("Predicted Values")
+plt.title("True vs. Predicted Values")
+plt.savefig("Graficos/True_vs_Predicted_Values.png")
+plt.show()
+
+# Print the mean absolute error (MAE)
+print("Mean Absolute Error:", mae)
+
+
 
 
 
@@ -174,6 +250,7 @@ print("El valor óptimo de la profundidad del árbol es:", best_depth)
 
 
 
+
 import pandas as pd
 import dask.dataframe as dd
 from sklearn.model_selection import train_test_split
@@ -204,6 +281,7 @@ mae = mean_absolute_error(y_test, y_pred)
 
 # Imprimir el error absoluto medio
 print('Error absoluto medio:', mae)
+
 
 
 
