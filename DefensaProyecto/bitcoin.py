@@ -1,20 +1,34 @@
+import ccxt
+import pandas as pd
+import dask.dataframe as dd
+
 def bitcoinToEuros(bitcoin_amount, bitcoin_value_euros):
     euros_value = bitcoin_amount * bitcoin_value_euros
     return euros_value
 
-bitcoin_amount = 0.5  # Cantidad de Bitcoin que posees
-bitcoin_value_euros = 50000  # Valor de Bitcoin en euros
+# Obtener el valor actual de Bitcoin en euros utilizando la API de CCXT
+exchange = ccxt.binance()
+ticker = exchange.fetch_ticker('BTC/EUR')
+bitcoin_value_euros = ticker['last']
 
+# Cargar los datos de tráfico aéreo del aeropuerto de San Francisco
+df = pd.read_csv('datos_trafico_aereo.csv')
+
+# Convertir el DataFrame de pandas a un DataFrame de Dask para paralelizar el procesamiento
+df_dask = dd.from_pandas(df, npartitions=4)
+
+# Calcular el valor de tu Bitcoin en euros utilizando la función bitcoinToEuros
+bitcoin_amount = 0.5  # Cantidad de Bitcoin que posees
 euros_value = bitcoinToEuros(bitcoin_amount, bitcoin_value_euros)
 
-# Correlacionar con datos de tráfico aéreo
-traffic_data = [10000, 12000, 15000, 18000, 20000]  # Datos de tráfico aéreo del aeropuerto de San Francisco
-correlation = np.corrcoef([euros_value, *traffic_data])[0, 1]
+# Realizar la correlación entre el valor de Bitcoin en euros y los datos de tráfico aéreo
+correlation_matrix = df_dask.corr()
 
-# Comprobar si el valor cae por debajo de 30,000€
+# Imprimir la matriz de correlación
+print("Matriz de correlación:")
+print(correlation_matrix)
+
+# Verificar si el valor de Bitcoin en euros cae por debajo de 30,000€ y enviar una alerta
 if euros_value < 30000:
-    print("Alerta: El valor de tu Bitcoin ha caído por debajo de 30,000€.")
+    print("ALERTA: El valor de tu Bitcoin ha caído por debajo de 30,000€")
 
-# Imprimir resultados
-print("Valor de tu Bitcoin en euros:", euros_value)
-print("Correlación entre el valor de Bitcoin y el tráfico aéreo:", correlation)
